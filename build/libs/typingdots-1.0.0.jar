@@ -1,0 +1,86 @@
+Minecraft version: 1.21.8
+Loader: Fabric
+Language: Java
+ScreenEvents.AFTER_INIT
+HudRenderCallback
+package com.example.typingdots;
+
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.gui.screen.ChatScreen;
+
+public class TypingDotsClient implements ClientModInitializer {
+
+    private static boolean showDots = false;
+    private static int tickCounter = 0;
+
+    @Override
+    public void onInitializeClient() {
+
+        // Detect when screens open
+        ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+            showDots = shouldShowDots(screen);
+        });
+
+        // Update animation
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (showDots) {
+                tickCounter++;
+            }
+        });
+
+        // Render overlay
+        ScreenEvents.AFTER_RENDER.register((screen, drawContext, mouseX, mouseY, tickDelta) -> {
+            if (showDots) {
+                renderDots(drawContext, screen);
+            }
+        });
+    }
+
+    private boolean shouldShowDots(Screen screen) {
+        return screen instanceof HandledScreen
+                || screen instanceof ChatScreen;
+    }
+
+    private void renderDots(DrawContext context, Screen screen) {
+        int centerX = screen.width / 2;
+        int y = screen.height / 4;
+
+        for (int i = 0; i < 3; i++) {
+            int offset = (tickCounter / 5 + i) % 3;
+            int bounce = (offset == 0) ? 4 : 0;
+
+            int x = centerX - 10 + i * 10;
+            context.fill(x, y - bounce, x + 4, y + 4 - bounce, 0xFFFFFFFF);
+        }
+    }
+}
+context.fill(...)
+double time = tickCounter + tickDelta;
+double bounce = Math.sin((time + i * 5) * 0.3) * 4;
+{
+  "schemaVersion": 1,
+  "id": "typingdots",
+  "version": "1.0.0",
+  "name": "Typing Dots",
+  "description": "Shows three hopping dots when interacting with UI.",
+  "authors": ["YourName"],
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.example.typingdots.TypingDotsClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "1.21.8"
+  }
+}
+gradlew runClient
+build/libs/typingdots-1.0.0.jar
